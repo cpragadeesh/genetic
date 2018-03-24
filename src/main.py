@@ -22,7 +22,7 @@ def main():
 
     X, y = get_dataset_from_file("./dataset/lung_info.csv")
 
-    estimator = linear_model.LogisticRegression()
+    estimator = KNeighborsClassifier()
 
     selector = GeneticSelectionCV(estimator,
                                   cv=5,
