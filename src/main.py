@@ -5,7 +5,7 @@ import collections
 from sklearn import datasets, linear_model
 from sklearn import svm
 from sklearn.model_selection import check_cv
-from sklearn.metrics.scorer import check_scoring
+from sklearn.metrics.scorer import check_scoring, make_scorer
 from sklearn.model_selection._validation import _fit_and_score
 from sklearn.base import is_classifier
 
@@ -14,8 +14,13 @@ from lib.genetic_selection import GeneticSelectionCV
 K_FOLD_CROSS_VALIDATION = 3
 TRAINING_DATASET_LOCATION = "./dataset/ovarian_info.csv"
 RAW_DATASET_LOCATION = "./dataset/ovarian_norm_random.csv"
+THRESHOLD_DELTA = 0.5 # Needs to be changed appropriately on loading dataset
+THRESHOLD_ALPHA = 0
 
 def get_dataset_from_file(csvfile, leave_header_row=True):
+
+    global THRESHOLD_ALPHA
+    global THRESHOLD_DELTA
 
     dataset = list(csv.reader(open(csvfile)))
     dataset = np.array(dataset)
@@ -27,7 +32,20 @@ def get_dataset_from_file(csvfile, leave_header_row=True):
     # To convert column vector to 1d array
     y = np.ravel(dataset[:, -1:]) 
 
+
+    count_dict = collections.Counter(y)
+
+    majority_class_count = max(count_dict[count_dict.keys()[0]], count_dict[count_dict.keys()[1]])
+    minority_class_count = min(count_dict[count_dict.keys()[0]], count_dict[count_dict.keys()[1]])
+
+    diff_class_count = minority_class_count - majority_class_count
+    sum_class_count = minority_class_count + majority_class_count
+
+    THRESHOLD_DELTA = diff_class_count / float(sum_class_count + 2 * THRESHOLD_ALPHA)
+
     print "Loaded %d samples with %d features" % (X.shape[0], X.shape[1], )
+    print "Threshold offset: %.2f" % (THRESHOLD_DELTA, )
+
     return X, y
 
 
@@ -79,31 +97,45 @@ def test():
     print estimator.predict(X_test[0])
     print estimator.predict(X_test[1])
     
+def custom_scorer(estimator, X, y): 
+
+    global THRESHOLD_DELTA
+    
+    predicted_proba = estimator.predict_proba(X)
+    labels_in_sorted_order = sorted(set(y))
+    threshold = 0.5 + THRESHOLD_DELTA
+    correct_count = 0
+    for index, sample in enumerate(predicted_proba):
+        label_index = 0 if sample[0] >= threshold else 1
+        if y[index] == labels_in_sorted_order[label_index]:
+            correct_count = correct_count + 1
+
+    accuracy = correct_count / float(len(y))
+
+    return accuracy
 
 def main():
 
     np.set_printoptions(threshold=np.nan)
     #test()
-    estimator = svm.SVC()
+    estimator = svm.SVC(probability=True)
 
     pre_filter_stats(estimator)
 
     X, y = get_dataset_from_file(TRAINING_DATASET_LOCATION)
+
     pre_GA(estimator, X, y)
 
     # GA start
-
     selector = GeneticSelectionCV(estimator,
                                   cv=K_FOLD_CROSS_VALIDATION,
                                   verbose=1,
-                                  scoring="accuracy",
+                                  scoring=custom_scorer,
                                   n_population=50,
                                   crossover_proba=0.8,
                                   mutation_proba=0.1,
                                   n_generations=40,
-                                  crossover_independent_proba=0.5,
-                                  mutation_independent_proba=0.05,
-                                  tournament_size=3,
+                                  tournament_size=2,
                                   caching=True,
                                   n_jobs=-1)
     selector = selector.fit(X, y)
