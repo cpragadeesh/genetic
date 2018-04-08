@@ -29,10 +29,10 @@ from sklearn.model_selection._validation import _fit_and_score
 from sklearn.metrics.scorer import check_scoring
 from sklearn.feature_selection.base import SelectorMixin
 from sklearn.externals.joblib import cpu_count
-from deap import algorithms
-from deap import base
-from deap import creator
-from deap import tools
+from ..deap import algorithms
+from ..deap import base
+from ..deap import creator
+from ..deap import tools
 
 
 creator.create("Fitness", base.Fitness, weights=(1.0, -1.0))
@@ -152,10 +152,10 @@ class GeneticSelectionCV(BaseEstimator, MetaEstimatorMixin, SelectorMixin):
     array([ True  True  True  True False False False False False False False False
            False False False False False False False False False False False False], dtype=bool)
     """
-    def __init__(self, estimator, cv=None, scoring=None, fit_params=None, verbose=0, n_jobs=1,
+    def __init__(self, estimator, please_kill_yourself_count, cv=None, scoring=None, fit_params=None, verbose=0, n_jobs=1,
                  n_population=300, crossover_proba=0.5, mutation_proba=0.2, n_generations=40,
                  crossover_independent_proba=0.1, mutation_independent_proba=0.05,
-                 tournament_size=3, caching=False):
+                 tournament_size=3, caching=False, hall_of_fame_size=2):
         self.estimator = estimator
         self.cv = cv
         self.scoring = scoring
@@ -171,6 +171,8 @@ class GeneticSelectionCV(BaseEstimator, MetaEstimatorMixin, SelectorMixin):
         self.tournament_size = tournament_size
         self.caching = caching
         self.scores_cache = {}
+        self.hall_of_fame_size = 2
+        self.please_kill_yourself_count = please_kill_yourself_count
 
     @property
     def _estimator_type(self):
@@ -221,19 +223,21 @@ class GeneticSelectionCV(BaseEstimator, MetaEstimatorMixin, SelectorMixin):
             toolbox.register("map", pool.map)
 
         pop = toolbox.population(n=self.n_population)
-        hof = tools.HallOfFame(1, similar=np.array_equal)
+        hof = tools.HallOfFame(self.hall_of_fame_size, similar=np.array_equal)
         stats = tools.Statistics(lambda ind: ind.fitness.values)
-        stats.register("avg", np.mean, axis=0)
-        stats.register("std", np.std, axis=0)
-        stats.register("min", np.min, axis=0)
-        stats.register("max", np.max, axis=0)
+        stats.register("avg", np.mean)
+        stats.register("std", np.std)
+        stats.register("min", np.min)
+        stats.register("max", np.max)
 
         if self.verbose > 0:
             print("Selecting features with genetic algorithm.")
 
-        algorithms.eaSimple(pop, toolbox, cxpb=self.crossover_proba, mutpb=self.mutation_proba,
+        algorithms.eaSimple(pop, toolbox, please_kill_yourself_count=self.please_kill_yourself_count,
+                            cxpb=self.crossover_proba, mutpb=self.mutation_proba,
                             ngen=self.n_generations, stats=stats, halloffame=hof,
                             verbose=self.verbose)
+
         if self.n_jobs != 1:
             pool.close()
             pool.join()

@@ -84,18 +84,6 @@ def pre_filter_stats(estimator):
     print "Fitness score before applying filter: ",
     print score
 
-
-def test():
-    
-    X, y = get_dataset_from_file(TRAINING_DATASET_LOCATION)
-    estimator = svm.SVC()
-
-    estimator.fit(X, y)
-
-    X_test, y_test = get_dataset_from_file("./dataset/test.csv", False)
-    print y_test
-    print estimator.predict(X_test[0])
-    print estimator.predict(X_test[1])
     
 def custom_scorer(estimator, X, y): 
 
@@ -114,16 +102,15 @@ def custom_scorer(estimator, X, y):
 
     return accuracy
 
+
 def main():
 
     np.set_printoptions(threshold=np.nan)
-    #test()
-    estimator = svm.SVC(probability=True)
 
+    estimator = svm.SVC(probability=True)
     pre_filter_stats(estimator)
 
     X, y = get_dataset_from_file(TRAINING_DATASET_LOCATION)
-
     pre_GA(estimator, X, y)
 
     # GA start
@@ -131,13 +118,16 @@ def main():
                                   cv=K_FOLD_CROSS_VALIDATION,
                                   verbose=1,
                                   scoring=custom_scorer,
-                                  n_population=50,
-                                  crossover_proba=0.8,
-                                  mutation_proba=0.1,
-                                  n_generations=40,
+                                  n_population=7,
+                                  crossover_proba=0.95,
+                                  mutation_proba=0.01,
+                                  n_generations=200,
                                   tournament_size=2,
                                   caching=True,
-                                  n_jobs=-1)
+                                  n_jobs=-1,
+                                  hall_of_fame_size=2,
+                                  please_kill_yourself_count=30)
+
     selector = selector.fit(X, y)
 
     # Post GA statistics
