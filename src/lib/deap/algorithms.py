@@ -82,8 +82,8 @@ def varAnd(population, toolbox, cxpb, mutpb):
     return offspring
 
 
-def eaSimple(population, toolbox, cxpb, mutpb, ngen, please_kill_yourself_count, stats=None,
-             halloffame=None, verbose=__debug__):
+def eaSimple(population, toolbox, cxpb, mutpb, ngen, please_kill_yourself_count, micro_ga=False, 
+            stats=None, halloffame=None, verbose=__debug__):
     """This algorithm reproduce the simplest evolutionary algorithm as
     presented in chapter 7 of [Back2000]_.
 
@@ -191,19 +191,20 @@ def eaSimple(population, toolbox, cxpb, mutpb, ngen, please_kill_yourself_count,
 
         # Start of micro-genetic algorithm modification
 
-        current_max_fitness = float(logbook.select('max')[-1])
-        if current_max_fitness <= best_fitness_so_far:
-            count_without_changes += 1
-            if count_without_changes == please_kill_yourself_count:
-                print "Killing all peasants"
-                pop_count = len(population)
-                population = halloffame.items
-                population = population + toolbox.population(n=pop_count - len(halloffame.items))
+        if micro_ga:
+            current_max_fitness = float(logbook.select('max')[-1])
+            if current_max_fitness <= best_fitness_so_far:
+                count_without_changes += 1
+                if count_without_changes == please_kill_yourself_count:
+                    print "Killing all peasants"
+                    pop_count = len(population)
+                    population = halloffame.items
+                    population = population + toolbox.population(n=pop_count - len(halloffame.items))
+                    count_without_changes = 0
+            else:
+                print "New found max_fitness: " + str(current_max_fitness)
                 count_without_changes = 0
-        else:
-            print "New found max_fitness: " + str(current_max_fitness)
-            count_without_changes = 0
-            best_fitness_so_far = current_max_fitness
+                best_fitness_so_far = current_max_fitness
 
     return population, logbook
 

@@ -117,16 +117,17 @@ def main():
     selector = GeneticSelectionCV(estimator,
                                   cv=K_FOLD_CROSS_VALIDATION,
                                   verbose=1,
-                                  scoring=custom_scorer,
+                                  scoring="accuracy",
                                   n_population=7,
                                   crossover_proba=0.95,
                                   mutation_proba=0.01,
-                                  n_generations=200,
+                                  n_generations=40,
                                   tournament_size=2,
                                   caching=True,
-                                  n_jobs=-1,
-                                  hall_of_fame_size=2,
-                                  please_kill_yourself_count=30)
+                                  n_jobs=8,
+                                  hall_of_fame_size=1,
+                                  please_kill_yourself_count=30,
+                                  micro_ga=False)
 
     selector = selector.fit(X, y)
 

@@ -155,7 +155,7 @@ class GeneticSelectionCV(BaseEstimator, MetaEstimatorMixin, SelectorMixin):
     def __init__(self, estimator, please_kill_yourself_count, cv=None, scoring=None, fit_params=None, verbose=0, n_jobs=1,
                  n_population=300, crossover_proba=0.5, mutation_proba=0.2, n_generations=40,
                  crossover_independent_proba=0.1, mutation_independent_proba=0.05,
-                 tournament_size=3, caching=False, hall_of_fame_size=2):
+                 tournament_size=3, caching=False, hall_of_fame_size=2, micro_ga=False):
         self.estimator = estimator
         self.cv = cv
         self.scoring = scoring
@@ -173,6 +173,7 @@ class GeneticSelectionCV(BaseEstimator, MetaEstimatorMixin, SelectorMixin):
         self.scores_cache = {}
         self.hall_of_fame_size = 2
         self.please_kill_yourself_count = please_kill_yourself_count
+        self.micro_ga = micro_ga
 
     @property
     def _estimator_type(self):
@@ -236,7 +237,7 @@ class GeneticSelectionCV(BaseEstimator, MetaEstimatorMixin, SelectorMixin):
         algorithms.eaSimple(pop, toolbox, please_kill_yourself_count=self.please_kill_yourself_count,
                             cxpb=self.crossover_proba, mutpb=self.mutation_proba,
                             ngen=self.n_generations, stats=stats, halloffame=hof,
-                            verbose=self.verbose)
+                            verbose=self.verbose, micro_ga=self.micro_ga)
 
         if self.n_jobs != 1:
             pool.close()
