@@ -35,14 +35,14 @@ from ..deap import creator
 from ..deap import tools
 
 
-creator.create("Fitness", base.Fitness, weights=(1.0, -1.0))
+creator.create("Fitness", base.Fitness, weights=(1.0, ))
 creator.create("Individual", list, fitness=creator.Fitness)
 
 
 def _evalFunction(individual, gaobject, estimator, X, y, cv, scorer, verbose, fit_params, caching):
     individual_sum = np.sum(individual, axis=0)
     if individual_sum == 0:
-        return -10000, individual_sum
+        return -10000, 
     individual_tuple = tuple(individual)
     if caching and individual_tuple in gaobject.scores_cache:
         return gaobject.scores_cache[individual_tuple], individual_sum
@@ -56,7 +56,7 @@ def _evalFunction(individual, gaobject, estimator, X, y, cv, scorer, verbose, fi
     scores_mean = np.mean(scores)
     if caching:
         gaobject.scores_cache[individual_tuple] = scores_mean
-    return scores_mean, individual_sum
+    return scores_mean, 
 
 
 class GeneticSelectionCV(BaseEstimator, MetaEstimatorMixin, SelectorMixin):
@@ -154,7 +154,7 @@ class GeneticSelectionCV(BaseEstimator, MetaEstimatorMixin, SelectorMixin):
     """
     def __init__(self, estimator, please_kill_yourself_count, cv=None, scoring=None, fit_params=None, verbose=0, n_jobs=1,
                  n_population=300, crossover_proba=0.5, mutation_proba=0.2, n_generations=40,
-                 crossover_independent_proba=0.1, mutation_independent_proba=0.05,
+                 crossover_independent_proba=0.5, mutation_independent_proba=0.2,
                  tournament_size=3, caching=False, hall_of_fame_size=2, micro_ga=False):
         self.estimator = estimator
         self.cv = cv
@@ -171,7 +171,7 @@ class GeneticSelectionCV(BaseEstimator, MetaEstimatorMixin, SelectorMixin):
         self.tournament_size = tournament_size
         self.caching = caching
         self.scores_cache = {}
-        self.hall_of_fame_size = 2
+        self.hall_of_fame_size = hall_of_fame_size
         self.please_kill_yourself_count = please_kill_yourself_count
         self.micro_ga = micro_ga
 

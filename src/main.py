@@ -108,7 +108,7 @@ def main():
     np.set_printoptions(threshold=np.nan)
 
     estimator = svm.SVC(probability=True)
-    pre_filter_stats(estimator)
+    #pre_filter_stats(estimator)
 
     X, y = get_dataset_from_file(TRAINING_DATASET_LOCATION)
     pre_GA(estimator, X, y)
@@ -118,16 +118,16 @@ def main():
                                   cv=K_FOLD_CROSS_VALIDATION,
                                   verbose=1,
                                   scoring="accuracy",
-                                  n_population=7,
+                                  n_population=5,
                                   crossover_proba=0.95,
                                   mutation_proba=0.01,
-                                  n_generations=40,
+                                  n_generations=50,
                                   tournament_size=2,
                                   caching=True,
                                   n_jobs=8,
                                   hall_of_fame_size=1,
-                                  please_kill_yourself_count=30,
-                                  micro_ga=False)
+                                  please_kill_yourself_count=10,
+                                  micro_ga=True)
 
     selector = selector.fit(X, y)
 
