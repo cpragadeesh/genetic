@@ -68,21 +68,13 @@ def fit_and_get_score(estimator, X, y):
 def pre_GA(estimator, X, y):
     
     score = fit_and_get_score(estimator, X, y)
-    print "Fitness score before applying GA: ",
-    print score
-
-def post_GA(estimator, X_selected, y):
-
-    score = fit_and_get_score(estimator, X_selected, y)
-    print "Fitness score after applying GA: ",
-    print score
+    print "Fitness score before applying GA: %.3f %%" % (score * 100, )
 
 
 def pre_filter_stats(estimator):
     X, y = get_dataset_from_file(RAW_DATASET_LOCATION)
     score = fit_and_get_score(estimator, X, y)
-    print "Fitness score before applying filter: ",
-    print score
+    print "Fitness score before applying filter: %.3f %%" % (score * 100, )
 
     
 def custom_scorer(estimator, X, y): 
@@ -108,7 +100,7 @@ def main():
     np.set_printoptions(threshold=np.nan)
 
     estimator = svm.SVC(probability=True)
-    #pre_filter_stats(estimator)
+    pre_filter_stats(estimator)
 
     X, y = get_dataset_from_file(TRAINING_DATASET_LOCATION)
     pre_GA(estimator, X, y)
@@ -117,16 +109,16 @@ def main():
     selector = GeneticSelectionCV(estimator,
                                   cv=K_FOLD_CROSS_VALIDATION,
                                   verbose=1,
-                                  scoring="accuracy",
+                                  scoring=custom_scorer,
                                   n_population=5,
                                   crossover_proba=0.95,
                                   mutation_proba=0.01,
-                                  n_generations=50,
+                                  n_generations=200,
                                   tournament_size=2,
                                   caching=True,
                                   n_jobs=8,
                                   hall_of_fame_size=1,
-                                  please_kill_yourself_count=10,
+                                  please_kill_yourself_count=30,
                                   micro_ga=True)
 
     selector = selector.fit(X, y)
@@ -134,9 +126,8 @@ def main():
     # Post GA statistics
 
     print "Number of features selected: " + str(collections.Counter(selector.support_)[True])
-    
-    X_selected = X[:, np.array(selector.support_)]
-    post_GA(estimator, X_selected, y)
+
+    print "Accuracy after GA: %.3f %%" % (selector.hof[0].fitness.values[0] * 100, )
 
 
 if __name__ == "__main__":

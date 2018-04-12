@@ -251,6 +251,8 @@ class GeneticSelectionCV(BaseEstimator, MetaEstimatorMixin, SelectorMixin):
         self.n_features_ = support_.sum()
         self.support_ = support_
 
+        self.hof = hof
+        
         return self
 
     @if_delegate_has_method(delegate='estimator')
